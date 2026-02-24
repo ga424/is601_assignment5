@@ -1,5 +1,4 @@
 import datetime
-from decimal import Decimal
 
 import pytest
 
@@ -7,29 +6,21 @@ from app.calculation import Calculation
 from app.calculator_memento import CalculatorMemento
 
 
-def test_memento_from_dict_rehydrates_history(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_memento_from_dict_rehydrates_history(
+	monkeypatch: pytest.MonkeyPatch,
+	raw_calc_payload: dict,
+	calc_factory,
+) -> None:
 	captured_calls = []
 
 	def fake_from_dict(item: dict) -> Calculation:
 		captured_calls.append(item)
-		return Calculation(
-			operation="Addition",
-			operand1=Decimal("1"),
-			operand2=Decimal("2"),
-		)
+		return calc_factory()
 
 	monkeypatch.setattr(Calculation, "from_dict", staticmethod(fake_from_dict), raising=False)
 
 	raw = {
-		"history": [
-			{
-				"operation": "Addition",
-				"operand1": "1",
-				"operand2": "2",
-				"result": "3",
-				"timestamp": "2026-01-01T00:00:00",
-			}
-		],
+		"history": [raw_calc_payload],
 		"timestamp": "2026-01-01T12:00:00",
 	}
 
@@ -40,17 +31,13 @@ def test_memento_from_dict_rehydrates_history(monkeypatch: pytest.MonkeyPatch) -
 	assert memento.timestamp == datetime.datetime.fromisoformat(raw["timestamp"])
 
 
-def test_memento_to_dict_currently_raises_type_error() -> None:
-	memento = CalculatorMemento(
-		history=[
-			Calculation(
-				operation="Addition",
-				operand1=Decimal("1"),
-				operand2=Decimal("2"),
-			)
-		]
-	)
+def test_memento_to_dict_serializes_history(calc_factory) -> None:
+	memento = CalculatorMemento(history=[calc_factory()])
 
-	with pytest.raises(TypeError):
-		memento.to_dict()
+	payload = memento.to_dict()
+
+	assert "history" in payload
+	assert len(payload["history"]) == 1
+	assert payload["history"][0]["operation"] == "Addition"
+	assert "timestamp" in payload
 
