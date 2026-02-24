@@ -10,7 +10,7 @@ from app.exceptions import ConfigurationError
 def test_get_project_root_points_to_repository_root() -> None:
     root = get_project_root()
     assert (root / "app").exists()
-    assert root.name == "assignment5"
+    assert (root / "tests").exists()
 
 
 def test_config_uses_defaults_when_not_provided(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
