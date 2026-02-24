@@ -61,7 +61,31 @@ def test_calculation_str_contains_operation_and_result(calc_factory) -> None:
 	calc = calc_factory()
 	rendered = str(calc)
 	assert "Addition" in rendered
-	assert "result=Decimal('3')" in rendered
+	assert "= 3 at" in rendered
+
+
+def test_calculation_repr_contains_result(calc_factory) -> None:
+	calc = calc_factory()
+	rendered = repr(calc)
+	assert "Calculation(operation=Addition" in rendered
+	assert "result=3" in rendered
+
+
+def test_calculation_eq_true_for_equivalent_values() -> None:
+	left = Calculation(operation="Addition", operand1=Decimal("1"), operand2=Decimal("2"))
+	right = Calculation(operation="Addition", operand1=Decimal("1"), operand2=Decimal("2"))
+	assert left == right
+
+
+def test_calculation_eq_notimplemented_for_other_type(calc_factory) -> None:
+	calc = calc_factory()
+	assert calc.__eq__(object()) is NotImplemented
+
+
+def test_calculation_format_result(calc_factory) -> None:
+	calc = calc_factory(operation="Division", operand1="1", operand2="3")
+	formatted = calc.format_result(precision=4)
+	assert formatted == "0.3333"
 
 
 def test_calculation_to_dict_contains_expected_keys(calc_factory) -> None:
