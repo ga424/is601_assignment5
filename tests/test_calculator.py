@@ -45,7 +45,7 @@ def test_calculator_initialization_with_explicit_config(tmp_path: Path) -> None:
 def test_calculator_initialization_with_default_config(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     monkeypatch.setenv("CALCULATOR_BASE_DIR", str(tmp_path))
     calc = Calculator()
-    assert calc.config.base_dir.name == "assignment5"
+    assert calc.config.base_dir == Path(__file__).resolve().parents[1]
 
 
 def test_calculator_init_handles_load_history_failure(
