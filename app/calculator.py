@@ -33,6 +33,8 @@ class Calculator:
         self._setup_logging()
 
         self.observers: List[HistoryObserver] = []
+        self.history: List[Calculation] = []
+        self.operation_strategy: Optional[Operation] = None
 
         self.undo_stack: List[CalculatorMemento] = []
         self.redo_stack: List[CalculatorMemento] = []
@@ -102,7 +104,6 @@ class Calculator:
                 operation = str(self.operation_strategy), 
                 operand1 = validated_a,
                 operand2 = validated_b,
-                result = result
             ) 
 
             # Save the current state before performing the operation to enable undo functionality.
@@ -114,7 +115,7 @@ class Calculator:
             # Append the new calculation to the history 
             self.history.append(calculation)
             
-            if len(self.history) > self.config.max_history:
+            if len(self.history) > self.config.max_history_size:
                 removed_calculation = self.history.pop(0)
                 logging.info(f"History limit exceeded. Removed oldest calculation: {removed_calculation}"  )
             
@@ -132,13 +133,16 @@ class Calculator:
         try: 
 
             self.config.history_dir.mkdir(parents=True, exist_ok=True)
-            history_data.append({
-                'operation': calc.operation,
-                'operand1': str(calc.operand1),
-                'operand2': str(calc.operand2),
-                'result': str(calc.result),
-                'timestamp': calc.timestamp.isoformat()
-            })
+            history_data = [
+                {
+                    'operation': calc.operation,
+                    'operand1': str(calc.operand1),
+                    'operand2': str(calc.operand2),
+                    'result': str(calc.result),
+                    'timestamp': calc.timestamp.isoformat()
+                }
+                for calc in self.history
+            ]
 
             if history_data: 
                 
@@ -172,8 +176,10 @@ class Calculator:
                     ]
                     logging.info(f"History loaded from {self.config.history_file}. Total calculations: {len(self.history)}")
                 else:
+                    self.history = []
                     logging.info(f"History file is empty: {self.config.history_file}")
             else:
+                self.history = []
                 logging.info(f"History file does not exist: {self.config.history_file}")
         except Exception as e:
             logging.error(f"Failed to load history: {e}")
@@ -197,6 +203,9 @@ class Calculator:
             f"{calc.operation}({calc.operand1}, {calc.operand2}) = {calc.result} at {calc.timestamp.isoformat()}"
             for calc in self.history
         ]
+
+    def get_history(self) -> List[Calculation]:
+        return self.history.copy()
 
     def clear_history(self) -> None:
         self.history.clear()

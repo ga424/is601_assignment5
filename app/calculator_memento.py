@@ -12,7 +12,7 @@ class CalculatorMemento:
 
     def to_dict(self) -> Dict[str, Any]:
         return {
-            'history': [self.to_dict(calc) for calc in self.history],
+            'history': [calc.to_dict() for calc in self.history],
             'timestamp': self.timestamp.isoformat()
         }
     
